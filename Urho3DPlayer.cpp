@@ -133,7 +133,7 @@ void Urho3DPlayer::Setup()
 void Urho3DPlayer::Start()
 {
     RegisterCustomComponents(context_);
-    //GetSubsystem<ResourceCache>()->AddResourceDir("TerrainEditorData");
+    GetSubsystem<ResourceCache>()->AddResourceDir("EditorData");
     String extension = GetExtension(scriptFileName_);
     if (extension != ".lua" && extension != ".luc")
     {
