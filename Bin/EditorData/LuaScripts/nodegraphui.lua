@@ -323,6 +323,12 @@ function NodeGraphUI:HandleGrayscale(eventType, eventData)
 	self.nodegroup.output:GetChild("HighValue",true).text=string.format("%.4f",minmax.y)
 	self.nodegroup.histotex:SetData(self.nodegroup.histoimg,false)
 	self.nodegroup.previewimg:SavePNG("prev.png")
+	
+	local scale=1.0/(minmax.y-minmax.x)
+	local add=-(minmax.x * scale)
+	
+	self.nodegroup.output:GetChild("Scale",true).text=string.format("%.4f",scale)
+	self.nodegroup.output:GetChild("Add",true).text=string.format("%.4f",add)
 end
 
 function NodeGraphUI:HandleRGBA(eventType, eventData)

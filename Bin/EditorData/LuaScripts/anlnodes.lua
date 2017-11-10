@@ -433,6 +433,18 @@ nodetypes=
 		instance={{op="Parameter", param=1}, {op="Parameter", param=2}, {op="Parameter", param=3}, {op="Parameter", param=4},
 			{op="Function", func="combineRGBA", indices={1,2,3,4}}}
 	},
+	combineHSVA=
+	{
+		inputs=
+		{
+			{"value", "Hue", 0.0},
+			{"value", "Sat", 1.0},
+			{"value", "Value", 1.0},
+			{"value", "Alpha", 1.0},
+		},
+		instance={{op="Parameter", param=1}, {op="Parameter", param=2}, {op="Parameter", param=3}, {op="Parameter", param=4},
+			{op="Function", func="combineHSVA", indices={1,2,3,4}}}
+	},
 	user=
 	{
 	},
@@ -860,6 +872,103 @@ fuzzydisk= {
       };
    };
 },
+correct= {
+   ["instance"] = {
+      [1] = {
+         ["op"] = "Parameter";
+         ["param"] = 1;
+      };
+      [2] = {
+         ["op"] = "Parameter";
+         ["param"] = 2;
+      };
+      [3] = {
+         ["op"] = "Function";
+         ["seeds"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+         ["func"] = "multiply";
+         ["indices"] = {
+            [1] = 1;
+            [2] = 2;
+         };
+         ["constants"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+      };
+      [4] = {
+         ["op"] = "Parameter";
+         ["param"] = 3;
+      };
+      [5] = {
+         ["op"] = "Function";
+         ["seeds"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+         ["func"] = "add";
+         ["indices"] = {
+            [1] = 3;
+            [2] = 4;
+         };
+         ["constants"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+      };
+      [6] = {
+         ["op"] = "Function";
+         ["seeds"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+         ["func"] = "minimum";
+         ["indices"] = {
+            [1] = 5;
+            [2] = "nil";
+         };
+         ["constants"] = {
+            [1] = "nil";
+            [2] = 1;
+         };
+      };
+      [7] = {
+         ["op"] = "Function";
+         ["seeds"] = {
+            [1] = "nil";
+            [2] = "nil";
+         };
+         ["func"] = "maximum";
+         ["indices"] = {
+            [1] = 6;
+            [2] = "nil";
+         };
+         ["constants"] = {
+            [1] = "nil";
+            [2] = 0;
+         };
+      };
+   };
+   ["inputs"] = {
+      [1] = {
+         [1] = "value";
+         [2] = "Input";
+         [3] = 1;
+      };
+      [2] = {
+         [1] = "value";
+         [2] = "Scale";
+         [3] = 1;
+      };
+      [3] = {
+         [1] = "value";
+         [2] = "Add";
+         [3] = 0;
+      };
+   };
+},
 distort={
    ["instance"] = {
       [1] = {
@@ -1131,6 +1240,7 @@ nodecategories=
 	color=
 	{
 		"combineRGBA",
+		"combineHSVA",
 	},
 	library=
 	{
@@ -1268,6 +1378,8 @@ function InstanceFunction(k, desc, params)
 				table.insert(n, k:simplexBasis(inputs[1]))
 			elseif c.func=="combineRGBA" then
 				table.insert(n, k:combineRGBA(inputs[1],inputs[2],inputs[3],inputs[4]))
+			elseif c.func=="combineHSVA" then
+				table.insert(n, k:combineHSVA(inputs[1],inputs[2],inputs[3],inputs[4]))
 			else
 				if nodetypes.library[c.func] then
 					table.insert(n, InstanceFunction(k, nodetypes.library[c.func], inputs))
