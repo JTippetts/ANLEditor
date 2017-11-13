@@ -317,7 +317,10 @@ function NodeGraphUI:HandleGrayscale(eventType, eventData)
 		seamlessmode=SEAMLESS_Z
 	end
 	
-	local minmax=RenderANLKernelToImage(self.nodegroup.previewimg,kernel,0,1,self.nodegroup.histoimg,seamlessmode,usez,zval)
+	local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+	local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+	local rescale=self.nodegroup.output:GetChild("RescaleCheck",true).checked
+	local minmax=RenderANLKernelToImage(self.nodegroup.previewimg,kernel,0,1,self.nodegroup.histoimg,seamlessmode,usez,zval,scalex,scaley,rescale)
 	self.nodegroup.previewtex:SetData(self.nodegroup.previewimg)
 	self.nodegroup.output:GetChild("LowValue",true).text=string.format("%.4f",minmax.x)
 	self.nodegroup.output:GetChild("HighValue",true).text=string.format("%.4f",minmax.y)
@@ -362,20 +365,15 @@ function NodeGraphUI:HandleRGBA(eventType, eventData)
 	elseif sz then
 		seamlessmode=SEAMLESS_Z
 	end
-	
-	RenderANLKernelToImageRGBA(self.nodegroup.previewimg,kernel,seamlessmode,usez,zval)
+	local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+	local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+	RenderANLKernelToImageRGBA(self.nodegroup.previewimg,kernel,seamlessmode,usez,zval,scalex,scaley)
 	self.nodegroup.previewtex:SetData(self.nodegroup.previewimg)
 	self.nodegroup.previewimg:SavePNG("prev.png")
 end
 
 function NodeGraphUI:HandleVolume(eventType, eventData)
-	if not self.nodegroup then return end
-	local kernel=BuildANLFunction(self.nodegroup.output)
-	local minmax=RenderANLKernelToImage(self.nodegroup.previewimg,kernel,0,1,self.nodegroup.histoimg)
-	self.nodegroup.previewtex:SetData(self.nodegroup.previewimg)
-	self.nodegroup.output:GetChild("LowValue",true).text=string.format("%.4f",minmax.x)
-	self.nodegroup.output:GetChild("HighValue",true).text=string.format("%.4f",minmax.y)
-	self.nodegroup.histotex:SetData(self.nodegroup.histoimg,false)
+	
 end
 
 function NodeGraphUI:HandleStore(eventType, eventData)

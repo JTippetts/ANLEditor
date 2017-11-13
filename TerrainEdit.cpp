@@ -1727,7 +1727,7 @@ void RenderANLKernelToBuffer(CArray2Dd *buffer, CKernel *kernel, float lowrange,
     buffer->scaleToRange(lowrange, highrange);
 }
 
-Vector2 RenderANLKernelToImage(Image *buffer, CKernel *kernel, float lowrange, float highrange, Image *histogram,int seamlessmode, bool usez, float z)
+Vector2 RenderANLKernelToImage(Image *buffer, CKernel *kernel, float lowrange, float highrange, Image *histogram,int seamlessmode, bool usez, float z, float scalex, float scaley, bool rescale)
 {
 	#define th(x) Log::Write(LOG_INFO, String((x)));
     if(!buffer) return Vector2();
@@ -1739,9 +1739,9 @@ Vector2 RenderANLKernelToImage(Image *buffer, CKernel *kernel, float lowrange, f
 	th(1);
 
 	if (!usez)
-		map2DNoZ(seamlessmode, img, *kernel, SMappingRanges(0,1,0,1,0,1), kernel->lastIndex());
+		map2DNoZ(seamlessmode, img, *kernel, SMappingRanges(0,scalex,0,scaley,0,1), kernel->lastIndex());
 	else
-		map2D(seamlessmode, img, *kernel, SMappingRanges(0,1,0,1,0,1), z, kernel->lastIndex());
+		map2D(seamlessmode, img, *kernel, SMappingRanges(0,scalex,0,scaley,0,1), z, kernel->lastIndex());
 	float low=img.getMin(),high=img.getMax();
 	th(2);
 	if(histogram)
@@ -1788,7 +1788,7 @@ Vector2 RenderANLKernelToImage(Image *buffer, CKernel *kernel, float lowrange, f
 		}
 	}
 	th(3);
-    img.scaleToRange(lowrange, highrange);
+    if(rescale) img.scaleToRange(lowrange, highrange);
     for(int x=0; x<w; ++x)
     {
         for(int y=0; y<h; ++y)
@@ -1801,7 +1801,7 @@ Vector2 RenderANLKernelToImage(Image *buffer, CKernel *kernel, float lowrange, f
 	return Vector2(low,high);
 }
 
-void RenderANLKernelToImageRGBA(Image *buffer, CKernel *kernel,int seamlessmode, bool usez, float z)
+void RenderANLKernelToImageRGBA(Image *buffer, CKernel *kernel,int seamlessmode, bool usez, float z, float scalex, float scaley)
 {
 	if(!buffer) return;
     CArray2Drgba img;
@@ -1811,9 +1811,9 @@ void RenderANLKernelToImageRGBA(Image *buffer, CKernel *kernel,int seamlessmode,
     img.resize(w,h);
 	
 	if(!usez)
-		mapRGBA2DNoZ(seamlessmode, img, *kernel, SMappingRanges(0,1,0,1,0,1), kernel->lastIndex());
+		mapRGBA2DNoZ(seamlessmode, img, *kernel, SMappingRanges(0,scalex,0,scaley,0,1), kernel->lastIndex());
 	else
-		mapRGBA2D(seamlessmode, img, *kernel, SMappingRanges(0,1,0,1,0,1), z, kernel->lastIndex());
+		mapRGBA2D(seamlessmode, img, *kernel, SMappingRanges(0,scalex,0,scaley,0,1), z, kernel->lastIndex());
     for(int x=0; x<w; ++x)
     {
         for(int y=0; y<h; ++y)

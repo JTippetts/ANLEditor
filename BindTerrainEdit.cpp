@@ -4701,7 +4701,10 @@ static int tolua_BindTerrainEdit_RenderANLKernelToImage00(lua_State* tolua_S)
  !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
  !tolua_isboolean(tolua_S,7,0,&tolua_err) ||
  !tolua_isnumber(tolua_S,8,0,&tolua_err) ||
- !tolua_isnoobj(tolua_S,9,&tolua_err)
+ !tolua_isnumber(tolua_S,9,0,&tolua_err) ||
+ !tolua_isnumber(tolua_S,10,0,&tolua_err) ||
+ !tolua_isboolean(tolua_S,11,0,&tolua_err) ||
+ !tolua_isnoobj(tolua_S,12,&tolua_err)
  )
  goto tolua_lerror;
  else
@@ -4715,8 +4718,11 @@ static int tolua_BindTerrainEdit_RenderANLKernelToImage00(lua_State* tolua_S)
   int seamlessmode = ((int)  tolua_tonumber(tolua_S,6,0));
   bool usez = ((bool)  tolua_toboolean(tolua_S,7,0));
   float z = ((float)  tolua_tonumber(tolua_S,8,0));
+  float scalex = ((float)  tolua_tonumber(tolua_S,9,0));
+  float scaley = ((float)  tolua_tonumber(tolua_S,10,0));
+  bool rescale = ((bool)  tolua_toboolean(tolua_S,11,0));
  {
-  Vector2 tolua_ret = (Vector2)  RenderANLKernelToImage(buffer,kernel,lowrange,highrange,histogram,seamlessmode,usez,z);
+  Vector2 tolua_ret = (Vector2)  RenderANLKernelToImage(buffer,kernel,lowrange,highrange,histogram,seamlessmode,usez,z,scalex,scaley,rescale);
  {
 #ifdef __cplusplus
  void* tolua_obj = Mtolua_new((Vector2)(tolua_ret));
@@ -4751,7 +4757,9 @@ static int tolua_BindTerrainEdit_RenderANLKernelToImageRGBA00(lua_State* tolua_S
  !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
  !tolua_isboolean(tolua_S,4,0,&tolua_err) ||
  !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
- !tolua_isnoobj(tolua_S,6,&tolua_err)
+ !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+ !tolua_isnumber(tolua_S,7,0,&tolua_err) ||
+ !tolua_isnoobj(tolua_S,8,&tolua_err)
  )
  goto tolua_lerror;
  else
@@ -4762,8 +4770,10 @@ static int tolua_BindTerrainEdit_RenderANLKernelToImageRGBA00(lua_State* tolua_S
   int seamlessmode = ((int)  tolua_tonumber(tolua_S,3,0));
   bool usez = ((bool)  tolua_toboolean(tolua_S,4,0));
   float z = ((float)  tolua_tonumber(tolua_S,5,0));
+  float scalex = ((float)  tolua_tonumber(tolua_S,6,0));
+  float scaley = ((float)  tolua_tonumber(tolua_S,7,0));
  {
-  RenderANLKernelToImageRGBA(buffer,kernel,seamlessmode,usez,z);
+  RenderANLKernelToImageRGBA(buffer,kernel,seamlessmode,usez,z,scalex,scaley);
  }
  }
  return 0;
