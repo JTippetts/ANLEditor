@@ -220,6 +220,42 @@ function NodeGraphUI:SubscribeLinkPoints(e,numinputs)
 	end
 end
 
+function NodeGraphUI:RemoveLinkPoints(e)
+	local d=GetNodeTypeDesc(e.name)--nodetypes[type]
+	if not d then return end
+	
+	local numinputs=#d.inputs
+	
+	local c
+	for c=0,numinputs-1,1 do
+		local input=e:GetChild("Input"..c, true)
+		if(input) then
+			local link=input:GetLink()
+			if link then
+				print("clearing link")
+				--input:ClearLink()
+				--local src=link:GetSource()
+				--if src then src:RemoveLink(link) end
+				self.nodegroup.linkpane:RemoveLink(link)
+			end
+		end
+	end
+	
+	local output=e:GetChild("Output0", true)
+	
+	if output then
+		local numlinks=output:GetNumLinks()
+		print("numlinks: "..numlinks)
+		for c=0,numlinks-1,1 do
+			local link=output:GetLink(c)
+			if link then
+				self.nodegroup.linkpane:RemoveLink(link)
+			end
+		end
+	end
+	
+end
+
 function NodeGraphUI:OutputNode(nodegroup)
 	local e=ui:LoadLayout(cache:GetResource("XMLFile", "UI/OutputNode.xml"))
 	e.visible=true
@@ -238,6 +274,7 @@ function NodeGraphUI:BuildNode(nodegroup, type)
 		self:SubscribeLinkPoints(e,#d.inputs)
 	end
 	
+	self:SubscribeToEvent(e:GetChild("Close",true), "Pressed", "NodeGraphUI:HandleCloseNode")
 	return e
 end
 
@@ -260,9 +297,9 @@ function NodeGraphUI:HandleDragEnd(eventType, eventData)
 		if string.sub(at.name, 1, 5)=="Input" then
 			local thislink=at:GetLink()
 			if thislink then
-				at:ClearLink()
-				local src=thislink:GetSource()
-				if src then src:RemoveLink(thislink) end
+				--at:ClearLink()
+				--local src=thislink:GetSource()
+				--if src then src:RemoveLink(thislink) end
 				self.nodegroup.linkpane:RemoveLink(thislink)
 			end
 			self.link:SetTarget(at)
@@ -271,8 +308,8 @@ function NodeGraphUI:HandleDragEnd(eventType, eventData)
 	end
 	
 	-- Destroy the link if not dropped on a valid target
-	local source=self.link:GetSource()
-	if(source) then source:RemoveLink(self.link) end
+	--local source=self.link:GetSource()
+	--if(source) then source:RemoveLink(self.link) end
 	self.nodegroup.linkpane:RemoveLink(self.link)
 	self.link=nil
 end
@@ -449,6 +486,22 @@ function NodeGraphUI:HandleExportRGBA(eventType, eventData)
 	local imageFilters={"*.png"}
 	self:CreateFileSelector("Export RGBA", "Save", "Cancel", fileSystem:GetProgramDir().."/Save", imageFilters, 0, false)
 	self:SubscribeToEvent(self.fileSelector, "FileSelected", "NodeGraphUI:HandleSaveRGBA")
+end
+
+function NodeGraphUI:HandleCloseNode(eventType, eventData)
+	print("Close node")
+	local e=eventData["Element"]:GetPtr("UIElement").parent.parent
+	
+	if e then self:RemoveLinkPoints(e) end
+	
+	local c,i, index
+	for c,i in ipairs(self.nodegroup.nodes) do
+		if i==e then index=c end
+	end
+	
+	if index then table.remove(self.nodegroup.nodes, index) end
+			
+	e:Remove()
 end
 
 function NodeGraphUI:HandleSaveRGBA(eventType, eventData)
