@@ -156,6 +156,7 @@ function NodeGraphUI:CreateNodeGroup()
 	self:SubscribeToEvent(nodegroup.output:GetChild("ExportGray",true),"Pressed", "NodeGraphUI:HandleExportGray")
 	self:SubscribeToEvent(nodegroup.output:GetChild("ExportRGBA",true),"Pressed", "NodeGraphUI:HandleExportRGBA")
 	self:SubscribeToEvent(nodegroup.output:GetChild("ExportNormalMap",true),"Pressed", "NodeGraphUI:HandleExportNormalMap")
+	self:SubscribeToEvent(nodegroup.output:GetChild("ExportBump",true),"Pressed","NodeGraphUI:HandleExportBump")
 	nodegroup.pane.visible=false
 	return nodegroup
 end
@@ -574,6 +575,74 @@ function NodeGraphUI:HandleSaveNormalMap(eventType, eventData)
 	end
 	self:CloseFileSelector()
 end
+
+function NodeGraphUI:HandleExportBump(eventType, eventData)
+	local imageFilters={"*.png"}
+	self:CreateFileSelector("Export Bump Map", "Save", "Cancel", fileSystem:GetProgramDir().."/Save", imageFilters, 0, false)
+	self:SubscribeToEvent(self.fileSelector, "FileSelected", "NodeGraphUI:HandleSaveBump")
+end
+
+function NodeGraphUI:HandleSaveBump(eventType, eventData)
+	print("Saving bumpmap...")
+	local fname=ExtractFilename(eventData, true)
+	self:CloseFileSelector()
+	if fname~="" then
+		print("Save at "..fname)
+		if not self.nodegroup then return end
+		local kernel=BuildANLFunction(self.nodegroup.output)
+		local sx=self.nodegroup.output:GetChild("SeamlessXCheck",true).checked
+		local sy=self.nodegroup.output:GetChild("SeamlessYCheck",true).checked
+		local sz=self.nodegroup.output:GetChild("SeamlessZCheck",true).checked
+		local usez=self.nodegroup.output:GetChild("UseZValue",true).checked
+		local zval=tonumber(self.nodegroup.output:GetChild("ZValue",true).text)
+		local seamlessmode=SEAMLESS_NONE
+		if sx then
+			if sy then
+				if sz then
+					seamlessmode=SEAMLESS_XYZ
+				else
+					seamlessmode=SEAMLESS_XY
+				end
+			elseif sz then
+				seamlessmode=SEAMLESS_XZ
+			else
+				seamlessmode=SEAMLESS_X
+			end
+		elseif sy then
+			if sz then
+				seamlessmode=SEAMLESS_YZ
+			else
+				seamlessmode=SEAMLESS_Y
+			end
+		elseif sz then
+			seamlessmode=SEAMLESS_Z
+		end
+	
+		local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+		local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+		local rescale=self.nodegroup.output:GetChild("RescaleCheck",true).checked
+		local width=tonumber(self.nodegroup.output:GetChild("ExportWidth",true).text)
+		local height=tonumber(self.nodegroup.output:GetChild("ExportHeight",true).text)
+		print("Width: "..width.." Height: "..height)
+		
+		local arr=CArray2Dd()
+		arr:resize(width,height)
+		if usez then
+			map2D(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1), zval, kernel:lastIndex())
+		else
+			map2DNoZ(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1),kernel:lastIndex())
+		end
+		
+		if rescale then
+			arr:scaleToRange(0,1)
+		end
+		
+		local bm=CArray2Dd()
+		calcBumpMap(arr,bm,{1.5,3.5,-1.5},50.0/width,seamlessmode==SEAMLESS_XY)
+		saveDoubleArray(fname,bm)
+	end
+end
+
 
 function NodeGraphUI:HandleStore(eventType, eventData)
 	local st,nodefunc=CreateLibraryDesc(self.nodegroup.output)
