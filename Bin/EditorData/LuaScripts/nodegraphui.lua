@@ -552,11 +552,7 @@ function NodeGraphUI:HandleSaveNormalMap(eventType, eventData)
 		local width=tonumber(self.nodegroup.output:GetChild("ExportWidth",true).text)
 		local height=tonumber(self.nodegroup.output:GetChild("ExportHeight",true).text)
 		print("Width: "..width.." Height: "..height)
-		--local img=Image()
-		--img:SetSize(width,height,3)
-		-- local hist=Image()
-		--local minmax=RenderANLKernelToImage(img,kernel,0,1,hist,seamlessmode,usez,zval,scalex,scaley,rescale)
-		--img:SavePNG(fname)
+		
 		local arr=CArray2Dd()
 		arr:resize(width,height)
 		if usez then
