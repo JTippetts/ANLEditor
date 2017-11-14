@@ -143,7 +143,7 @@ function NodeGraphUI:CreateNodeGroup()
 	nodegroup.histotex:SetData(nodegroup.histoimg,false)
 	
 	nodegroup.output=self:OutputNode(nodegroup)
-	nodegroup.output.position=IntVector2(-nodegroup.pane.position.x + graphics.width-nodegroup.output.width, -nodegroup.pane.position.y + graphics.height/4)
+	nodegroup.output.position=IntVector2(-nodegroup.pane.position.x + graphics.width-nodegroup.output.width, -nodegroup.pane.position.y + (graphics.height/2-nodegroup.output.height/2))
 	
 	nodegroup.output:GetChild("Preview",true).texture=nodegroup.previewtex
 	nodegroup.output:GetChild("Histogram",true).texture=nodegroup.histotex
@@ -152,6 +152,10 @@ function NodeGraphUI:CreateNodeGroup()
 	self:SubscribeToEvent(nodegroup.output:GetChild("RGBA",true),"Pressed","NodeGraphUI:HandleRGBA")
 	self:SubscribeToEvent(nodegroup.output:GetChild("Volume",true),"Pressed","NodeGraphUI:HandleVolume")
 	self:SubscribeToEvent(nodegroup.output:GetChild("Store",true),"Pressed","NodeGraphUI:HandleStore")
+	
+	self:SubscribeToEvent(nodegroup.output:GetChild("ExportGray",true),"Pressed", "NodeGraphUI:HandleExportGray")
+	self:SubscribeToEvent(nodegroup.output:GetChild("ExportRGBA",true),"Pressed", "NodeGraphUI:HandleExportRGBA")
+	self:SubscribeToEvent(nodegroup.output:GetChild("ExportNormalMap",true),"Pressed", "NodeGraphUI:HandleExportNormalMap")
 	nodegroup.pane.visible=false
 	return nodegroup
 end
@@ -376,6 +380,201 @@ function NodeGraphUI:HandleVolume(eventType, eventData)
 	
 end
 
+function NodeGraphUI:HandleExportGray(eventType, eventData)
+	local imageFilters={"*.png"}
+	self:CreateFileSelector("Export Grayscale", "Save", "Cancel", fileSystem:GetProgramDir().."/Save", imageFilters, 0, false)
+	self:SubscribeToEvent(self.fileSelector, "FileSelected", "NodeGraphUI:HandleSaveGray")
+end
+
+function NodeGraphUI:HandleSaveGray(eventType, eventData)
+	print("Saving grayscale...")
+	local fname=ExtractFilename(eventData, true)
+	if fname~="" then
+		print("Save at "..fname)
+		if not self.nodegroup then return end
+		local kernel=BuildANLFunction(self.nodegroup.output)
+		local sx=self.nodegroup.output:GetChild("SeamlessXCheck",true).checked
+		local sy=self.nodegroup.output:GetChild("SeamlessYCheck",true).checked
+		local sz=self.nodegroup.output:GetChild("SeamlessZCheck",true).checked
+		local usez=self.nodegroup.output:GetChild("UseZValue",true).checked
+		local zval=tonumber(self.nodegroup.output:GetChild("ZValue",true).text)
+		local seamlessmode=SEAMLESS_NONE
+		if sx then
+			if sy then
+				if sz then
+					seamlessmode=SEAMLESS_XYZ
+				else
+					seamlessmode=SEAMLESS_XY
+				end
+			elseif sz then
+				seamlessmode=SEAMLESS_XZ
+			else
+				seamlessmode=SEAMLESS_X
+			end
+		elseif sy then
+			if sz then
+				seamlessmode=SEAMLESS_YZ
+			else
+				seamlessmode=SEAMLESS_Y
+			end
+		elseif sz then
+			seamlessmode=SEAMLESS_Z
+		end
+	
+		local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+		local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+		local rescale=self.nodegroup.output:GetChild("RescaleCheck",true).checked
+		local width=tonumber(self.nodegroup.output:GetChild("ExportWidth",true).text)
+		local height=tonumber(self.nodegroup.output:GetChild("ExportHeight",true).text)
+		print("Width: "..width.." Height: "..height)
+		local arr=CArray2Dd()
+		arr:resize(width,height)
+		if usez then
+			map2D(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1), zval, kernel:lastIndex())
+		else
+			map2DNoZ(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1),kernel:lastIndex())
+		end
+		
+		if rescale then
+			arr:scaleToRange(0,1)
+		end
+		
+		saveDoubleArray(fname, arr)
+	end
+	self:CloseFileSelector()
+end
+
+function NodeGraphUI:HandleExportRGBA(eventType, eventData)
+	local imageFilters={"*.png"}
+	self:CreateFileSelector("Export RGBA", "Save", "Cancel", fileSystem:GetProgramDir().."/Save", imageFilters, 0, false)
+	self:SubscribeToEvent(self.fileSelector, "FileSelected", "NodeGraphUI:HandleSaveRGBA")
+end
+
+function NodeGraphUI:HandleSaveRGBA(eventType, eventData)
+	print("Saving RGBA...")
+	local fname=ExtractFilename(eventData, true)
+	if fname~="" then
+		print("Save at "..fname)
+		if not self.nodegroup then return end
+		local kernel=BuildANLFunction(self.nodegroup.output)
+		local sx=self.nodegroup.output:GetChild("SeamlessXCheck",true).checked
+		local sy=self.nodegroup.output:GetChild("SeamlessYCheck",true).checked
+		local sz=self.nodegroup.output:GetChild("SeamlessZCheck",true).checked
+		local usez=self.nodegroup.output:GetChild("UseZValue",true).checked
+		local zval=tonumber(self.nodegroup.output:GetChild("ZValue",true).text)
+		local seamlessmode=SEAMLESS_NONE
+		if sx then
+			if sy then
+				if sz then
+					seamlessmode=SEAMLESS_XYZ
+				else
+					seamlessmode=SEAMLESS_XY
+				end
+			elseif sz then
+				seamlessmode=SEAMLESS_XZ
+			else
+				seamlessmode=SEAMLESS_X
+			end
+		elseif sy then
+			if sz then
+				seamlessmode=SEAMLESS_YZ
+			else
+				seamlessmode=SEAMLESS_Y
+			end
+		elseif sz then
+			seamlessmode=SEAMLESS_Z
+		end
+	
+		local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+		local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+		local rescale=self.nodegroup.output:GetChild("RescaleCheck",true).checked
+		local width=tonumber(self.nodegroup.output:GetChild("ExportWidth",true).text)
+		local height=tonumber(self.nodegroup.output:GetChild("ExportHeight",true).text)
+		print("Width: "..width.." Height: "..height)
+		local arr=CArray2Drgba()
+		arr:resize(width,height)
+		if usez then
+			mapRGBA2D(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1), zval, kernel:lastIndex())
+		else
+			mapRGBA2DNoZ(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1),kernel:lastIndex())
+		end
+		
+		saveRGBAArray(fname, arr)
+	end
+	self:CloseFileSelector()
+end
+
+function NodeGraphUI:HandleExportNormalMap(eventType, eventData)
+	local imageFilters={"*.png"}
+	self:CreateFileSelector("Export Normal Map", "Save", "Cancel", fileSystem:GetProgramDir().."/Save", imageFilters, 0, false)
+	self:SubscribeToEvent(self.fileSelector, "FileSelected", "NodeGraphUI:HandleSaveNormalMap")
+end
+
+function NodeGraphUI:HandleSaveNormalMap(eventType, eventData)
+	print("Saving normalmap...")
+	local fname=ExtractFilename(eventData, true)
+	if fname~="" then
+		print("Save at "..fname)
+		if not self.nodegroup then return end
+		local kernel=BuildANLFunction(self.nodegroup.output)
+		local sx=self.nodegroup.output:GetChild("SeamlessXCheck",true).checked
+		local sy=self.nodegroup.output:GetChild("SeamlessYCheck",true).checked
+		local sz=self.nodegroup.output:GetChild("SeamlessZCheck",true).checked
+		local usez=self.nodegroup.output:GetChild("UseZValue",true).checked
+		local zval=tonumber(self.nodegroup.output:GetChild("ZValue",true).text)
+		local seamlessmode=SEAMLESS_NONE
+		if sx then
+			if sy then
+				if sz then
+					seamlessmode=SEAMLESS_XYZ
+				else
+					seamlessmode=SEAMLESS_XY
+				end
+			elseif sz then
+				seamlessmode=SEAMLESS_XZ
+			else
+				seamlessmode=SEAMLESS_X
+			end
+		elseif sy then
+			if sz then
+				seamlessmode=SEAMLESS_YZ
+			else
+				seamlessmode=SEAMLESS_Y
+			end
+		elseif sz then
+			seamlessmode=SEAMLESS_Z
+		end
+	
+		local scalex=tonumber(self.nodegroup.output:GetChild("XScale",true).text)
+		local scaley=tonumber(self.nodegroup.output:GetChild("YScale",true).text)
+		local rescale=self.nodegroup.output:GetChild("RescaleCheck",true).checked
+		local width=tonumber(self.nodegroup.output:GetChild("ExportWidth",true).text)
+		local height=tonumber(self.nodegroup.output:GetChild("ExportHeight",true).text)
+		print("Width: "..width.." Height: "..height)
+		--local img=Image()
+		--img:SetSize(width,height,3)
+		-- local hist=Image()
+		--local minmax=RenderANLKernelToImage(img,kernel,0,1,hist,seamlessmode,usez,zval,scalex,scaley,rescale)
+		--img:SavePNG(fname)
+		local arr=CArray2Dd()
+		arr:resize(width,height)
+		if usez then
+			map2D(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1), zval, kernel:lastIndex())
+		else
+			map2DNoZ(seamlessmode,arr,kernel,SMappingRanges(0,scalex,0,scaley,0,1),kernel:lastIndex())
+		end
+		
+		if rescale then
+			arr:scaleToRange(0,1)
+		end
+		
+		local nm=CArray2Drgba()
+		calcNormalMap(arr,nm,50.0/width,true,seamlessmode==SEAMLESS_XY)
+		saveRGBAArray(fname,nm)
+	end
+	self:CloseFileSelector()
+end
+
 function NodeGraphUI:HandleStore(eventType, eventData)
 	local st,nodefunc=CreateLibraryDesc(self.nodegroup.output)
 	local name=self.nodegroup.output:GetChild("StoreName",true).text
@@ -420,4 +619,52 @@ function NodeGraphUI:HandleMenuSelected(eventType, eventData)
 		print("no text")
 	end
     
+end
+
+function CenterDialog(element)
+    local size = element:GetSize()
+    element:SetPosition((graphics.width - size.x) / 2, (graphics.height - size.y) / 2)
+end
+
+
+function ExtractFilename(eventData, forSave)
+    local fileName=""
+
+    -- Check for OK
+    if eventData["OK"]:GetBool() then
+        local filter = eventData["Filter"]:GetString();
+        fileName = eventData["FileName"]:GetString();
+        -- Add default extension for saving if not specified
+        if (GetExtension(fileName)=="" and forSave==true and filter ~= "*.*")
+		then
+            fileName = fileName..string.sub(filter,2)
+		end
+    end
+    return fileName
+end
+
+function NodeGraphUI:CreateFileSelector(title, ok, cancel, initialPath, filters, initialFilter, autoLocalizeTitle)
+	if autoLocalizeTitle==nil then autoLocalizeTitle=true end
+	
+	if self.fileSelector then
+		self:UnsubscribeFromEvent(self.fileSelector, "FileSelected")
+	end
+	
+	self.fileSelector=FileSelector()
+	self.fileSelector.defaultStyle=uiStyle
+	self.fileSelector.title=title
+	self.fileSelector.titleText.autoLocalizable=autoLocalizeTitle
+	self.fileSelector.path=initialPath
+	self.fileSelector:SetButtonTexts(ok, cancel)
+	self.fileSelector:SetFilters(filters, initialFilter)
+	CenterDialog(self.fileSelector.window)
+	self.fileSelector.visible=true
+end
+
+function NodeGraphUI:CloseFileSelector()
+	if self.fileSelector then
+		self:UnsubscribeFromEvent(self.fileSelector, "FileSelected")
+	end
+	
+	self.fileSelector=nil
 end
