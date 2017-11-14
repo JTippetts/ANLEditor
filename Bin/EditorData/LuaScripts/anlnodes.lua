@@ -147,8 +147,7 @@ nodetypes=
 	{
 		inputs=
 		{
-			{"value", "LowV", 0.0},
-			{"value", "HighV", 1.0},
+			{"value", "Previous", 0.0},
 			{"value", "T0", 0.0},
 			{"value", "T1", 1.0},
 			{"value", "V0", 0.0},
@@ -156,7 +155,7 @@ nodetypes=
 			{"value", "Control", 0.5}
 		},
 		instance={{op="Parameter", param=1}, {op="Parameter", param=2}, {op="Parameter", param=3}, {op="Parameter", param=4}, {op="Parameter", param=5},
-			{op="Parameter", param=6}, {op="Parameter", param=7},{op="Function", func="curveSection", indices={1,2,3,4,5,6,7}}}
+			{op="Parameter", param=6}, {op="Function", func="curveSection", indices={1,2,3,4,5,6}}}
 	},
 	abs=
 	{
@@ -1333,7 +1332,7 @@ function InstanceFunction(k, desc, params)
 			elseif c.func=="smootherStep" then
 				table.insert(n, k:smootherStep(inputs[1], inputs[2], inputs[3]))
 			elseif c.func=="curveSection" then
-				table.insert(n, k:curveSection(inputs[1], inputs[2], inputs[3], inputs[4], inputs[5], inputs[6], inputs[7]))
+				table.insert(n, k:curveSection(inputs[1], inputs[2], inputs[3], inputs[4], inputs[5], inputs[6]))
 			elseif c.func=="abs" then
 				table.insert(n, k:abs(inputs[1]))
 			elseif c.func=="sin" then
