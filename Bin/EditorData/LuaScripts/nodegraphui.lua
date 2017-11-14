@@ -735,5 +735,6 @@ function NodeGraphUI:CloseFileSelector()
 		self:UnsubscribeFromEvent(self.fileSelector, "FileSelected")
 	end
 	
+	self.fileSelector.visible=false
 	self.fileSelector=nil
 end
